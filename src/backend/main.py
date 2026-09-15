@@ -21,7 +21,7 @@ app = FastAPI(
 # Allow the React dev server to call this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -260,9 +260,9 @@ async def generate_bluf_endpoint(request: BLUFRequest):
         elif "429" in msg or "RESOURCE_EXHAUSTED" in msg:
             detail = "Gemini rate limit reached. Please wait a moment and try again."
         elif "401" in msg or "403" in msg or "API_KEY_INVALID" in msg:
-            detail = "Gemini API key is invalid or lacks permission. Check GEMINI_API_KEY in src/backend/.env."
+            detail = f"Gemini authentication failed (401/403). Check GEMINI_API_KEY in src/backend/.env. Detail: {msg[:200]}"
         elif "404" in msg:
-            detail = f"Gemini model not found. Check GEMINI_MODEL in src/backend/.env. Detail: {msg[:200]}"
+            detail = f"Gemini API returned 404. Detail: {msg[:200]}"
         else:
             detail = f"AI generation failed: {msg[:300]}"
         raise HTTPException(status_code=502, detail=detail)

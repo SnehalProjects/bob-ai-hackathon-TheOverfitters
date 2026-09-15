@@ -309,7 +309,7 @@ function IncidentCard({ incident }) {
     setBlufState("loading");
     setBlufError(null);
     try {
-      const res  = await fetch("/api/bluf", {
+      const res  = await fetch("http://127.0.0.1:8000/api/bluf", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ incident }),
@@ -493,7 +493,7 @@ export default function App() {
 
   /* check backend on mount */
   useEffect(() => {
-    fetch("/api/status")
+    fetch("http://127.0.0.1:8000/api/status")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(() => setApiStatus("ok"))
       .catch(() => setApiStatus("error"));
@@ -521,7 +521,7 @@ export default function App() {
     setResult(null);
 
     try {
-      const res  = await fetch("/api/alerts/correlate", { method: "POST", body: formData });
+      const res  = await fetch("http://127.0.0.1:8000/api/alerts/correlate", { method: "POST", body: formData });
       const data = await res.json();
 
       if (!res.ok) {
