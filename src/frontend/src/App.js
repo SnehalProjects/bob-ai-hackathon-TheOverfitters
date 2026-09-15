@@ -1,323 +1,416 @@
 import React, { useState, useEffect, useRef } from "react";
 
 /* ─────────────────────────────────────────────
-   Styles
+   Global styles
 ───────────────────────────────────────────── */
-const s = {
-  app: {
-    fontFamily: "'Segoe UI', system-ui, sans-serif",
-    backgroundColor: "#0f172a",
-    minHeight: "100vh",
-    color: "#e2e8f0",
-    margin: 0,
-    padding: 0,
-  },
-  header: {
-    backgroundColor: "#1e293b",
-    padding: "16px 32px",
-    borderBottom: "1px solid #334155",
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  },
-  headerTitle: { margin: 0, fontSize: "20px", fontWeight: 600, color: "#f1f5f9" },
-  badge: {
-    backgroundColor: "#0ea5e9",
-    color: "#fff",
-    fontSize: "11px",
-    padding: "2px 8px",
-    borderRadius: "9999px",
-    fontWeight: 600,
-    letterSpacing: "0.05em",
-  },
-  main: { maxWidth: "1040px", margin: "0 auto", padding: "32px 24px" },
+const GLOBAL_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-  /* status bar */
-  statusCard: {
-    backgroundColor: "#1e293b",
-    border: "1px solid #334155",
-    borderRadius: "8px",
-    padding: "14px 20px",
-    marginBottom: "28px",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    fontSize: "14px",
-  },
-  dot: (color) => ({
-    width: "10px", height: "10px", borderRadius: "50%",
-    backgroundColor: color, flexShrink: 0,
-  }),
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* upload card */
-  uploadCard: {
-    backgroundColor: "#1e293b",
-    border: "2px dashed #334155",
-    borderRadius: "10px",
-    padding: "28px 24px",
-    marginBottom: "28px",
-    textAlign: "center",
-  },
-  uploadCardLabel: {
-    display: "block", fontSize: "15px", fontWeight: 600,
-    color: "#cbd5e1", marginBottom: "16px",
-  },
-  fileRow: {
-    display: "flex", alignItems: "center", justifyContent: "center",
-    gap: "12px", flexWrap: "wrap",
-  },
-  fileInput: { display: "none" },
-  chooseBtn: {
-    backgroundColor: "#334155", color: "#e2e8f0",
-    border: "1px solid #475569", borderRadius: "6px",
-    padding: "8px 18px", fontSize: "14px", cursor: "pointer",
-  },
-  uploadBtn: (disabled) => ({
-    backgroundColor: disabled ? "#1e3a5f" : "#0ea5e9",
-    color: disabled ? "#475569" : "#fff",
-    border: "none", borderRadius: "6px",
-    padding: "8px 20px", fontSize: "14px", fontWeight: 600,
-    cursor: disabled ? "not-allowed" : "pointer",
-  }),
-  fileName: { fontSize: "13px", color: "#94a3b8" },
-  hint: { marginTop: "12px", fontSize: "12px", color: "#475569" },
+  html { font-size: 14px; }
 
-  /* banners */
-  errorBanner: {
-    backgroundColor: "#450a0a", border: "1px solid #7f1d1d",
-    color: "#fca5a5", padding: "12px 16px", borderRadius: "6px",
-    marginBottom: "20px", fontSize: "14px",
-  },
-  successBanner: {
-    backgroundColor: "#052e16", border: "1px solid #166534",
-    color: "#86efac", padding: "12px 16px", borderRadius: "6px",
-    marginBottom: "20px", fontSize: "14px",
-  },
+  body {
+    background: #111318;
+    color: #c9d1d9;
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
 
-  /* tabs */
-  tabRow: {
-    display: "flex", gap: "4px",
-    borderBottom: "1px solid #334155", marginBottom: "24px",
-  },
-  tab: (active) => ({
-    padding: "8px 20px", fontSize: "14px", fontWeight: 600,
-    cursor: "pointer", border: "none",
-    borderBottom: active ? "2px solid #0ea5e9" : "2px solid transparent",
-    backgroundColor: "transparent",
-    color: active ? "#0ea5e9" : "#94a3b8",
-    marginBottom: "-1px",
-  }),
+  code, .mono {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+  }
 
-  /* summary stat cards */
-  statsRow: { display: "flex", gap: "14px", marginBottom: "24px", flexWrap: "wrap" },
-  statCard: (color) => ({
-    flex: "1 1 110px", backgroundColor: "#1e293b",
-    border: `1px solid ${color}`, borderRadius: "8px",
-    padding: "14px 18px", textAlign: "center",
-  }),
-  statNumber: (color) => ({ fontSize: "26px", fontWeight: 700, color }),
-  statLabel: {
-    fontSize: "11px", color: "#94a3b8", marginTop: "4px",
-    textTransform: "uppercase", letterSpacing: "0.07em",
-  },
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
-  /* incident card */
-  incidentCard: (priority) => {
-    const border = { CRITICAL: "#7f1d1d", HIGH: "#7c2d12", MEDIUM: "#713f12", LOW: "#14532d", UNKNOWN: "#334155" };
-    return {
-      backgroundColor: "#1e293b",
-      border: `1px solid ${border[priority] || border.UNKNOWN}`,
-      borderRadius: "8px",
-      marginBottom: "12px",
-      overflow: "hidden",
-    };
-  },
-  incidentHeader: {
-    display: "flex", alignItems: "center", gap: "12px",
-    padding: "14px 18px", cursor: "pointer", userSelect: "none",
-  },
-  incidentTitle: { fontWeight: 600, fontSize: "15px", flex: 1 },
-  incidentMeta: { fontSize: "13px", color: "#94a3b8" },
-  incidentBody: { padding: "0 18px 16px", borderTop: "1px solid #334155" },
+  @keyframes dotPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
 
-  /* priority badge */
-  priorityBadge: (priority) => {
-    const map = {
-      CRITICAL: { bg: "#450a0a", text: "#fca5a5", border: "#7f1d1d" },
-      HIGH:     { bg: "#431407", text: "#fdba74", border: "#7c2d12" },
-      MEDIUM:   { bg: "#422006", text: "#fcd34d", border: "#713f12" },
-      LOW:      { bg: "#052e16", text: "#86efac", border: "#14532d" },
-    };
-    const c = map[priority] || { bg: "#1e293b", text: "#94a3b8", border: "#334155" };
-    return {
-      backgroundColor: c.bg, color: c.text,
-      border: `1px solid ${c.border}`,
-      padding: "2px 8px", borderRadius: "4px",
-      fontWeight: 700, fontSize: "11px", letterSpacing: "0.05em",
-    };
-  },
+  .fade-in { animation: fadeSlideIn 0.2s ease both; }
 
-  /* score bar */
-  scoreBarWrap: {
-    backgroundColor: "#0f172a", borderRadius: "4px",
-    height: "8px", width: "80px", overflow: "hidden", flexShrink: 0,
-  },
-  scoreBarFill: (score) => {
-    const color =
-      score >= 80 ? "#f87171" :
-      score >= 60 ? "#fb923c" :
-      score >= 40 ? "#fcd34d" : "#4ade80";
-    return { height: "100%", width: `${score}%`, backgroundColor: color, borderRadius: "4px" };
-  },
-  scoreText: { fontSize: "13px", fontWeight: 700, color: "#cbd5e1", flexShrink: 0, minWidth: "32px", textAlign: "right" },
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
 
-  /* scoring reasons */
-  reasonsList: { margin: "8px 0 12px", padding: 0, listStyle: "none" },
-  reasonItem: {
-    fontSize: "12px", color: "#94a3b8", padding: "2px 0",
-    display: "flex", alignItems: "flex-start", gap: "6px",
-  },
-  reasonDot: { color: "#475569", flexShrink: 0, marginTop: "1px" },
+  /* Row hover */
+  .tr-hover:hover td { background: rgba(255,255,255,0.025); }
 
-  /* MITRE ATT&CK table */
-  mitreTable: { width: "100%", borderCollapse: "collapse", fontSize: "12px", marginBottom: "12px" },
-  mitreTh: {
-    textAlign: "left", padding: "6px 10px",
-    borderBottom: "1px solid #1e3a5f",
-    color: "#3b82f6", fontWeight: 700, fontSize: "10px",
-    textTransform: "uppercase", letterSpacing: "0.08em",
-    backgroundColor: "#0c1a2e",
-  },
-  mitreTd: { padding: "7px 10px", borderBottom: "1px solid #0f172a", verticalAlign: "top" },
-  mitreId: {
-    fontFamily: "monospace", fontSize: "11px", fontWeight: 700,
-    color: "#60a5fa", whiteSpace: "nowrap",
-  },
-  mitreTactic: {
-    display: "inline-block",
-    backgroundColor: "#1e3a5f", color: "#93c5fd",
-    border: "1px solid #1d4ed8",
-    padding: "1px 6px", borderRadius: "3px",
-    fontSize: "10px", fontWeight: 600,
-    whiteSpace: "nowrap",
-  },
-  mitreMatchedDesc: { fontSize: "11px", color: "#64748b", marginTop: "2px" },
+  /* Card header hover */
+  .card-header:hover { background: rgba(255,255,255,0.02); }
 
-  /* identifier pills row */
-  pillRow: { display: "flex", gap: "6px", flexWrap: "wrap", padding: "10px 0 8px" },
-  pill: (color) => ({
-    backgroundColor: color + "22",
-    border: `1px solid ${color}55`,
-    color: color,
-    padding: "2px 8px", borderRadius: "4px",
-    fontSize: "12px", fontWeight: 600,
-  }),
+  /* Chip copy icon */
+  .ioc-chip .copy-btn { opacity: 0; transition: opacity 0.15s; }
+  .ioc-chip:hover .copy-btn { opacity: 1; }
 
-  /* nested alert table */
-  table: { width: "100%", borderCollapse: "collapse", fontSize: "13px", marginTop: "8px" },
-  th: {
-    textAlign: "left", padding: "8px 12px",
-    borderBottom: "1px solid #334155",
-    color: "#64748b", fontWeight: 600, fontSize: "11px",
-    textTransform: "uppercase", letterSpacing: "0.07em",
-  },
-  td: { padding: "9px 12px", borderBottom: "1px solid #0f172a", color: "#e2e8f0" },
-  severityBadge: (sev) => {
-    const map = {
-      HIGH:    { bg: "#450a0a", text: "#fca5a5" },
-      MEDIUM:  { bg: "#431407", text: "#fdba74" },
-      LOW:     { bg: "#052e16", text: "#86efac" },
-      UNKNOWN: { bg: "#1e293b", text: "#94a3b8" },
-    };
-    const c = map[sev] || map.UNKNOWN;
-    return { backgroundColor: c.bg, color: c.text, padding: "2px 7px", borderRadius: "4px", fontWeight: 600, fontSize: "11px" };
-  },
+  /* Tab underline */
+  .tab-item { border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; }
+  .tab-item:hover { color: #e6edf3 !important; }
+  .tab-item.active { color: #e6edf3 !important; border-color: #4493f8 !important; }
 
-  emptyState: { textAlign: "center", padding: "48px", color: "#475569" },
+  /* Filter pill */
+  .filter-pill { transition: background 0.15s, color 0.15s, border-color 0.15s; }
+  .filter-pill:hover { border-color: #4493f8 !important; color: #c9d1d9 !important; }
+  .filter-pill.active { background: rgba(68,147,248,0.12) !important; border-color: #4493f8 !important; color: #79c0ff !important; }
 
-  /* raw alerts table view */
-  sectionTitle: { fontSize: "15px", fontWeight: 600, marginBottom: "14px", color: "#cbd5e1" },
+  /* Buttons */
+  .btn-ghost:hover { background: rgba(255,255,255,0.05) !important; }
+  .btn-primary:hover:not(:disabled) { background: #1f6feb !important; }
 
-  /* BLUF panel */
-  blufBtn: (loading) => ({
-    marginTop: "16px",
-    backgroundColor: loading ? "#1e3a5f" : "#7c3aed",
-    color: loading ? "#475569" : "#fff",
-    border: "none", borderRadius: "6px",
-    padding: "8px 18px", fontSize: "13px", fontWeight: 600,
-    cursor: loading ? "not-allowed" : "pointer",
-    display: "flex", alignItems: "center", gap: "6px",
-  }),
-  blufPanel: {
-    marginTop: "16px",
-    backgroundColor: "#0c1a2e",
-    border: "1px solid #4c1d95",
-    borderRadius: "8px",
-    padding: "16px 20px",
-  },
-  blufHeader: {
-    display: "flex", alignItems: "center", justifyContent: "space-between",
-    marginBottom: "10px",
-  },
-  blufTitle: {
-    fontSize: "11px", fontWeight: 700, color: "#a78bfa",
-    textTransform: "uppercase", letterSpacing: "0.08em",
-  },
-  blufModel: { fontSize: "10px", color: "#475569" },
-  blufText: {
-    whiteSpace: "pre-wrap", fontSize: "13px", lineHeight: "1.7",
-    color: "#e2e8f0", fontFamily: "inherit",
-  },
-  blufError: {
-    marginTop: "12px", fontSize: "13px", color: "#fca5a5",
-    backgroundColor: "#450a0a", border: "1px solid #7f1d1d",
-    borderRadius: "6px", padding: "10px 14px",
-  },
-  blufNotConfigured: {
-    marginTop: "12px", fontSize: "13px", color: "#fcd34d",
-    backgroundColor: "#422006", border: "1px solid #92400e",
-    borderRadius: "6px", padding: "10px 14px",
-    whiteSpace: "pre-wrap",
+  /* Score marker transition */
+  .score-marker { transition: left 0.3s ease; }
+
+  /* BLUF section */
+  .bluf-section { border-left: 2px solid #30363d; padding-left: 14px; margin-bottom: 18px; }
+  .bluf-section:last-child { margin-bottom: 0; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+`;
+
+if (!document.getElementById("app-css")) {
+  const s = document.createElement("style");
+  s.id = "app-css";
+  s.textContent = GLOBAL_CSS;
+  document.head.appendChild(s);
+}
+
+/* ─────────────────────────────────────────────
+   Design tokens — muted, professional
+───────────────────────────────────────────── */
+const T = {
+  // Backgrounds
+  bg:        "#111318",
+  surface:   "#161b22",
+  surfaceEl: "#1c2128",
+  surfaceHov:"#21262d",
+
+  // Borders
+  border:    "#30363d",
+  borderSub: "#21262d",
+
+  // Text
+  text:      "#e6edf3",
+  textSec:   "#8b949e",
+  textDis:   "#484f58",
+
+  // Accent (single, restrained blue)
+  accent:    "#4493f8",
+  accentMut: "#1f6feb",
+
+  // Severity — muted, not neon
+  CRITICAL:  "#e05252",   // muted red
+  HIGH:      "#d18b4a",   // muted amber
+  MEDIUM:    "#c9a227",   // muted yellow
+  LOW:       "#3fb950",   // muted green
+
+  // Tactic colors — desaturated
+  tactic: {
+    "Reconnaissance":       "#5aade8",
+    "Initial Access":       "#d18b4a",
+    "Execution":            "#9d6fe8",
+    "Persistence":          "#c76070",
+    "Privilege Escalation": "#d47843",
+    "Defense Evasion":      "#88a833",
+    "Credential Access":    "#c9a227",
+    "Discovery":            "#4493f8",
+    "Lateral Movement":     "#c06090",
+    "Collection":           "#8b6fe8",
+    "Command and Control":  "#e05252",
+    "Exfiltration":         "#d18b4a",
+    "Impact":               "#c94040",
   },
 };
 
-const SEV_ORDER     = ["HIGH", "MEDIUM", "LOW"];
-const SEV_COLOUR    = { HIGH: "#f87171", MEDIUM: "#fb923c", LOW: "#4ade80", TOTAL: "#38bdf8", INCIDENTS: "#a78bfa" };
 const PRIORITY_ORDER = ["CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
+function sevColor(s) {
+  return { CRITICAL: T.CRITICAL, HIGH: T.HIGH, MEDIUM: T.MEDIUM, LOW: T.LOW }[s] || T.textDis;
+}
+
+function tacticColor(t) {
+  return T.tactic[t] || T.textSec;
+}
+
 /* ─────────────────────────────────────────────
-   IncidentCard — collapsible
+   Utility components
 ───────────────────────────────────────────── */
-function IncidentCard({ incident }) {
+
+/* Severity dot + label badge */
+function SevBadge({ sev }) {
+  const c = sevColor(sev);
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: "5px",
+      fontSize: "11px", fontWeight: 500,
+      color: c,
+    }}>
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0, display: "inline-block" }} />
+      {sev}
+    </span>
+  );
+}
+
+/* Priority pill */
+function PriorityPill({ priority }) {
+  const c = sevColor(priority);
+  return (
+    <span style={{
+      display: "inline-block",
+      fontSize: "10px", fontWeight: 600,
+      color: c,
+      background: c + "18",
+      border: `1px solid ${c}30`,
+      borderRadius: "4px",
+      padding: "1px 7px",
+      letterSpacing: "0.03em",
+      flexShrink: 0,
+    }}>{priority}</span>
+  );
+}
+
+/* Segmented score bar */
+function ScoreBar({ score }) {
+  const pct = Math.min(Math.max(score, 0), 100);
+  const barColor =
+    pct >= 80 ? T.CRITICAL :
+    pct >= 60 ? T.HIGH :
+    pct >= 40 ? T.MEDIUM : T.LOW;
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <div style={{ position: "relative", width: 88, height: 4, background: T.borderSub, borderRadius: 2, flexShrink: 0 }}>
+        <div style={{
+          position: "absolute", left: 0, top: 0, height: "100%",
+          width: `${pct}%`, background: barColor,
+          borderRadius: 2, transition: "width 0.4s ease",
+        }} />
+      </div>
+      <span style={{ fontSize: "12px", fontWeight: 600, color: barColor, minWidth: 24, fontFamily: "'JetBrains Mono', monospace" }}>
+        {score}
+      </span>
+    </div>
+  );
+}
+
+/* Sparkline — alert cadence over time */
+function Sparkline({ alerts }) {
+  if (!alerts || alerts.length < 2) return null;
+
+  const pts = alerts
+    .map(a => { const d = new Date(a.timestamp); return isNaN(d) ? null : { t: d.getTime(), s: a.severity }; })
+    .filter(Boolean)
+    .sort((a, b) => a.t - b.t);
+
+  if (pts.length < 2) return null;
+
+  const W = 64, H = 20;
+  const minT = pts[0].t, maxT = pts[pts.length - 1].t;
+  const range = maxT - minT || 1;
+  const yMap = { HIGH: 2, CRITICAL: 2, MEDIUM: 9, LOW: 16 };
+
+  const coords = pts.map(p => ({
+    x: ((p.t - minT) / range) * (W - 4) + 2,
+    y: yMap[p.s] ?? 9,
+    c: sevColor(p.s),
+  }));
+
+  const line = coords.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ");
+
+  return (
+    <svg width={W} height={H} style={{ flexShrink: 0, opacity: 0.6 }}>
+      <path d={line} fill="none" stroke={T.border} strokeWidth="1.5" />
+      {coords.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="2" fill={p.c} />
+      ))}
+    </svg>
+  );
+}
+
+/* IOC chip with copy */
+function IocChip({ type, value }) {
+  const [copied, setCopied] = useState(false);
+  const typeColor = { IP: T.accent, HOST: "#9d6fe8", USER: T.LOW }[type] || T.textSec;
+
+  function copy(e) {
+    e.stopPropagation();
+    navigator.clipboard?.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+    });
+  }
+
+  return (
+    <span className="ioc-chip" style={{
+      display: "inline-flex", alignItems: "center", gap: "4px",
+      border: `1px solid ${T.border}`,
+      borderRadius: "4px",
+      padding: "2px 8px",
+      fontSize: "11px",
+      background: T.surfaceEl,
+      userSelect: "none",
+    }}>
+      <span style={{ color: T.textDis, fontSize: "10px" }}>{type}</span>
+      <span className="mono" style={{ color: T.text }}>{value}</span>
+      <span
+        className="copy-btn mono"
+        onClick={copy}
+        title="Copy"
+        style={{ color: copied ? T.LOW : T.textDis, fontSize: "10px", cursor: "pointer", marginLeft: 2 }}
+      >{copied ? "✓" : "⎘"}</span>
+    </span>
+  );
+}
+
+/* Status indicator */
+function StatusDot({ status }) {
+  const color = status === "ok" ? T.LOW : status === "error" ? T.CRITICAL : T.textDis;
+  const label = status === "ok" ? "API connected" : status === "error" ? "API unreachable" : "Connecting…";
+  const anim  = status === null ? "dotPulse 1.4s ease infinite" : "none";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+      <span style={{ width: 7, height: 7, borderRadius: "50%", background: color, display: "inline-block", animation: anim }} />
+      <span style={{ fontSize: "12px", color: T.textSec }}>{label}</span>
+    </div>
+  );
+}
+
+/* Section label */
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize: "11px", fontWeight: 600, color: T.textDis, letterSpacing: "0.05em", marginBottom: 10, textTransform: "uppercase" }}>
+      {children}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   BLUF Panel
+───────────────────────────────────────────── */
+function BlufPanel({ incidentId, result }) {
+  const raw   = result?.bluf  || "";
+  const model = result?.model || "";
+
+  const SECTIONS = [
+    { key: "BOTTOM LINE",             label: "Bottom Line",           accent: T.CRITICAL },
+    { key: "THREAT SUMMARY",          label: "Threat Summary",        accent: T.HIGH },
+    { key: "EVIDENCE",                label: "Evidence",              accent: T.MEDIUM },
+    { key: "MITRE ATT&CK TECHNIQUES", label: "MITRE ATT&CK",         accent: T.accent },
+    { key: "PRIORITY & RISK SCORE",   label: "Priority & Risk Score", accent: T.LOW },
+    { key: "RECOMMENDED ACTIONS",     label: "Recommended Actions",   accent: "#9d6fe8" },
+  ];
+
+  // Parse sections from raw text
+  const parsed = {};
+  let rem = raw;
+  [...SECTIONS].reverse().forEach(({ key }) => {
+    const re = new RegExp(`${key.replace(/[&()]/g, c => `\\${c === "&" ? "&" : c}`)}\\s*:`, "i");
+    const idx = rem.search(re);
+    if (idx !== -1) {
+      parsed[key] = rem.slice(idx).replace(re, "").trim();
+      rem = rem.slice(0, idx);
+    }
+  });
+  const hasSections = Object.keys(parsed).length > 0;
+
+  const ts = new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC";
+
+  return (
+    <div className="fade-in" style={{
+      marginTop: 16,
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      overflow: "hidden",
+    }}>
+      {/* Header */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "10px 16px",
+        background: T.surfaceEl,
+        borderBottom: `1px solid ${T.border}`,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{
+            fontSize: "11px", fontWeight: 600, color: T.text,
+          }}>Intelligence Brief</span>
+          <span className="mono" style={{ fontSize: "11px", color: T.textSec }}>{incidentId}</span>
+        </div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <span style={{ fontSize: "11px", color: T.textDis }}>{model}</span>
+          <span className="mono" style={{ fontSize: "10px", color: T.textDis }}>{ts}</span>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: "20px 20px", background: T.surface }}>
+        {hasSections ? SECTIONS.map(({ key, label, accent }) => {
+          const content = parsed[key];
+          if (!content) return null;
+          const isMain = key === "BOTTOM LINE";
+          return (
+            <div key={key} className="bluf-section" style={{ borderLeftColor: accent + "60" }}>
+              <div style={{ fontSize: "10px", fontWeight: 600, color: accent, letterSpacing: "0.04em", marginBottom: 4, textTransform: "uppercase" }}>
+                {label}
+              </div>
+              <div style={{
+                fontSize: isMain ? "14px" : "13px",
+                fontWeight: isMain ? 600 : 400,
+                color: isMain ? T.text : T.textSec,
+                lineHeight: 1.65,
+                whiteSpace: "pre-wrap",
+              }}>{content}</div>
+            </div>
+          );
+        }) : (
+          <pre style={{ whiteSpace: "pre-wrap", fontSize: "13px", color: T.textSec, lineHeight: 1.65 }}>{raw}</pre>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   IncidentCard
+───────────────────────────────────────────── */
+function IncidentCard({ incident, fpFilter }) {
   const [open,       setOpen]       = useState(false);
-  const [blufState,  setBlufState]  = useState("idle");   // idle | loading | done | error
-  const [blufResult, setBlufResult] = useState(null);     // { bluf, model, configured }
+  const [blufState,  setBlufState]  = useState("idle");
+  const [blufResult, setBlufResult] = useState(null);
   const [blufError,  setBlufError]  = useState(null);
+  const [tag,        setTag]        = useState(null); // null | "fp" | "confirmed"
 
   const {
-    incident_id, priority, severity, risk_score, score_reasons,
-    alert_count, identifiers, alerts, mitre_techniques,
+    incident_id, priority, severity, risk_score, score_reasons = [],
+    alert_count, identifiers = {}, alerts = [], mitre_techniques = [],
   } = incident;
 
-  const allIps     = identifiers.ips       || [];
-  const allHosts   = identifiers.hostnames || [];
-  const allUsers   = identifiers.usernames || [];
-  const reasons    = score_reasons         || [];
-  const techniques = mitre_techniques      || [];
+  const ips   = identifiers.ips       || [];
+  const hosts = identifiers.hostnames || [];
+  const users = identifiers.usernames || [];
 
-  async function handleGenerateBluf() {
+  // Filter
+  if (fpFilter === "fp"        && tag !== "fp")        return null;
+  if (fpFilter === "confirmed" && tag !== "confirmed") return null;
+
+  async function fetchBluf(e) {
+    e.stopPropagation();
+    if (blufState === "loading") return;
     setBlufState("loading");
     setBlufError(null);
     try {
       const res  = await fetch("http://127.0.0.1:8000/api/bluf", {
-        method:  "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ incident }),
+        body: JSON.stringify({ incident }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.detail || "Unknown error from backend");
-      }
+      if (!res.ok) throw new Error(data.detail || "Backend error");
       setBlufResult(data);
       setBlufState("done");
     } catch (err) {
@@ -326,150 +419,225 @@ function IncidentCard({ incident }) {
     }
   }
 
+  const pc = sevColor(priority);
+
   return (
-    <div style={s.incidentCard(priority)}>
-      {/* ── collapsed header ── */}
-      <div style={s.incidentHeader} onClick={() => setOpen((o) => !o)}>
-        {/* priority badge */}
-        <span style={s.priorityBadge(priority)}>{priority}</span>
+    <div style={{
+      border: `1px solid ${T.border}`,
+      borderRadius: 8,
+      marginBottom: 8,
+      overflow: "hidden",
+      background: T.surface,
+    }}>
+      {/* ── Row header ── */}
+      <div
+        className="card-header"
+        style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "11px 16px",
+          cursor: "pointer", userSelect: "none",
+        }}
+        onClick={() => setOpen(o => !o)}
+      >
+        {/* Priority */}
+        <PriorityPill priority={priority} />
 
-        {/* incident ID */}
-        <span style={s.incidentTitle}>{incident_id}</span>
+        {/* ID */}
+        <span className="mono" style={{ fontSize: "12px", color: T.textSec, flexShrink: 0, minWidth: 72 }}>
+          {incident_id}
+        </span>
 
-        {/* score bar + number */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={s.scoreBarWrap}>
-            <div style={s.scoreBarFill(risk_score)} />
-          </div>
-          <span style={s.scoreText}>{risk_score}</span>
-        </div>
+        {/* Score bar */}
+        <ScoreBar score={risk_score} />
 
-        {/* alert count */}
-        <span style={s.incidentMeta}>{alert_count} alert{alert_count !== 1 ? "s" : ""}</span>
+        {/* Severity */}
+        <SevBadge sev={severity} />
 
-        {/* chevron */}
-        <span style={{ color: "#475569", fontSize: "13px" }}>{open ? "▲" : "▼"}</span>
+        {/* Sparkline */}
+        <Sparkline alerts={alerts} />
+
+        {/* Alert count */}
+        <span style={{ flex: 1 }} />
+        <span style={{ fontSize: "12px", color: T.textDis }}>
+          {alert_count} alert{alert_count !== 1 ? "s" : ""}
+        </span>
+
+        {/* Tag toggles */}
+        <span
+          onClick={e => { e.stopPropagation(); setTag(t => t === "fp" ? null : "fp"); }}
+          style={{
+            fontSize: "10px", padding: "1px 6px", borderRadius: 3,
+            border: `1px solid ${tag === "fp" ? T.MEDIUM + "80" : T.border}`,
+            color: tag === "fp" ? T.MEDIUM : T.textDis,
+            background: tag === "fp" ? T.MEDIUM + "14" : "transparent",
+            cursor: "pointer",
+          }}
+        >FP</span>
+        <span
+          onClick={e => { e.stopPropagation(); setTag(t => t === "confirmed" ? null : "confirmed"); }}
+          style={{
+            fontSize: "10px", padding: "1px 6px", borderRadius: 3,
+            border: `1px solid ${tag === "confirmed" ? T.LOW + "80" : T.border}`,
+            color: tag === "confirmed" ? T.LOW : T.textDis,
+            background: tag === "confirmed" ? T.LOW + "14" : "transparent",
+            cursor: "pointer",
+          }}
+        >Confirmed</span>
+
+        {/* Brief button */}
+        <button
+          onClick={fetchBluf}
+          disabled={blufState === "loading"}
+          style={{
+            fontSize: "11px", padding: "3px 10px", borderRadius: 5,
+            border: `1px solid ${T.border}`,
+            background: "transparent",
+            color: blufState === "loading" ? T.textDis : T.accent,
+            display: "flex", alignItems: "center", gap: 4,
+          }}
+          onClick={fetchBluf}
+        >
+          {blufState === "loading" ? (
+            <span style={{ animation: "dotPulse 1s infinite" }}>Generating…</span>
+          ) : "Generate Brief"}
+        </button>
+
+        {/* Chevron */}
+        <span style={{
+          color: T.textDis, fontSize: "10px",
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform 0.18s ease",
+          display: "inline-block", flexShrink: 0,
+        }}>▼</span>
       </div>
 
-      {/* ── expanded body ── */}
+      {/* ── Expanded body ── */}
       {open && (
-        <div style={s.incidentBody}>
+        <div className="fade-in" style={{ borderTop: `1px solid ${T.border}`, padding: "16px 16px 18px" }}>
 
-          {/* MITRE ATT&CK techniques section */}
-          {techniques.length > 0 && (
-            <div style={{ marginTop: "12px", marginBottom: "12px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>
-                MITRE ATT&amp;CK Techniques
-              </div>
-              <table style={s.mitreTable}>
-                <thead>
-                  <tr>
-                    <th style={s.mitreTh}>Technique ID</th>
-                    <th style={s.mitreTh}>Technique Name</th>
-                    <th style={s.mitreTh}>Tactic</th>
-                    <th style={s.mitreTh}>Matched Activity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {techniques.map((t) => (
-                    <tr key={t.technique_id}>
-                      <td style={s.mitreTd}>
-                        <span style={s.mitreId}>{t.technique_id}</span>
-                      </td>
-                      <td style={{ ...s.mitreTd, color: "#e2e8f0" }}>{t.technique_name}</td>
-                      <td style={s.mitreTd}>
-                        <span style={s.mitreTactic}>{t.tactic}</span>
-                      </td>
-                      <td style={s.mitreTd}>
-                        {t.matched_descriptions.map((d, i) => (
-                          <div key={i} style={s.mitreMatchedDesc}>› {d}</div>
-                        ))}
-                      </td>
+          {/* IOC chips */}
+          {(ips.length > 0 || hosts.length > 0 || users.length > 0) && (
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+              {ips.map(v    => <IocChip key={v} type="IP"   value={v} />)}
+              {hosts.map(v  => <IocChip key={v} type="HOST" value={v} />)}
+              {users.map(v  => <IocChip key={v} type="USER" value={v} />)}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+            {/* MITRE table */}
+            {mitre_techniques.length > 0 && (
+              <div style={{ flex: "2 1 320px", minWidth: 0 }}>
+                <SectionLabel>MITRE ATT&amp;CK</SectionLabel>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                  <thead>
+                    <tr>
+                      {["ID", "Technique", "Tactic"].map(h => (
+                        <th key={h} style={{
+                          textAlign: "left", padding: "5px 8px",
+                          borderBottom: `1px solid ${T.border}`,
+                          color: T.textDis, fontWeight: 600, fontSize: "10px",
+                          letterSpacing: "0.04em", textTransform: "uppercase",
+                        }}>{h}</th>
+                      ))}
                     </tr>
+                  </thead>
+                  <tbody>
+                    {mitre_techniques.map(t => {
+                      const tc = tacticColor(t.tactic);
+                      return (
+                        <tr key={t.technique_id} className="tr-hover">
+                          <td style={{ padding: "6px 8px", borderBottom: `1px solid ${T.borderSub}` }}>
+                            <span className="mono" style={{ fontSize: "11px", color: T.accent }}>{t.technique_id}</span>
+                          </td>
+                          <td style={{ padding: "6px 8px", borderBottom: `1px solid ${T.borderSub}`, color: T.text, fontSize: "12px" }}>
+                            {t.technique_name}
+                          </td>
+                          <td style={{ padding: "6px 8px", borderBottom: `1px solid ${T.borderSub}` }}>
+                            <span style={{
+                              fontSize: "10px", fontWeight: 500, color: tc,
+                              background: tc + "18", border: `1px solid ${tc}30`,
+                              borderRadius: 3, padding: "1px 6px",
+                            }}>{t.tactic}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Score breakdown */}
+            {score_reasons.length > 0 && (
+              <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                <SectionLabel>Score Factors</SectionLabel>
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+                  {score_reasons.map((r, i) => (
+                    <li key={i} style={{ fontSize: "12px", color: T.textSec, display: "flex", gap: 6, alignItems: "flex-start" }}>
+                      <span style={{ color: T.textDis, flexShrink: 0, marginTop: 2 }}>·</span>
+                      {r}
+                    </li>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* score reasoning section */}
-          {reasons.length > 0 && (
-            <div style={{ marginTop: "12px", marginBottom: "4px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "4px" }}>
-                Risk Score Breakdown
+                </ul>
               </div>
-              <ul style={s.reasonsList}>
-                {reasons.map((r, i) => (
-                  <li key={i} style={s.reasonItem}>
-                    <span style={s.reasonDot}>›</span>
-                    <span>{r}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* identifier pills */}
-          {(allIps.length > 0 || allHosts.length > 0 || allUsers.length > 0) && (
-            <div style={s.pillRow}>
-              {allIps.map((ip) => <span key={ip} style={s.pill("#38bdf8")}>IP: {ip}</span>)}
-              {allHosts.map((h) => <span key={h}  style={s.pill("#a78bfa")}>HOST: {h}</span>)}
-              {allUsers.map((u) => <span key={u}  style={s.pill("#34d399")}>USER: {u}</span>)}
-            </div>
-          )}
-
-          {/* alert rows */}
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "6px" }}>
-            Related Alerts
+            )}
           </div>
-          <table style={s.table}>
-            <thead>
-              <tr>
-                <th style={s.th}>ID</th>
-                <th style={s.th}>Sev</th>
-                <th style={s.th}>Source</th>
-                <th style={s.th}>Description</th>
-                <th style={s.th}>Timestamp</th>
-              </tr>
-            </thead>
-            <tbody>
-              {alerts.map((a, idx) => (
-                <tr key={idx}>
-                  <td style={s.td}>{a.id}</td>
-                  <td style={s.td}><span style={s.severityBadge(a.severity)}>{a.severity}</span></td>
-                  <td style={s.td}>{a.source}</td>
-                  <td style={s.td}>{a.description}</td>
-                  <td style={s.td}>{a.timestamp || "—"}</td>
+
+          {/* Related alerts */}
+          <div style={{ marginTop: 18 }}>
+            <SectionLabel>Related Alerts</SectionLabel>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+              <thead>
+                <tr>
+                  {["ID", "Severity", "Source", "Description", "Timestamp"].map(h => (
+                    <th key={h} style={{
+                      textAlign: "left", padding: "5px 10px",
+                      borderBottom: `1px solid ${T.border}`,
+                      color: T.textDis, fontWeight: 600, fontSize: "10px",
+                      letterSpacing: "0.04em", textTransform: "uppercase",
+                    }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {alerts.map((a, i) => (
+                  <tr key={i} className="tr-hover">
+                    <td style={{ padding: "7px 10px", borderBottom: `1px solid ${T.borderSub}` }}>
+                      <span className="mono" style={{ fontSize: "11px", color: T.textDis }}>{a.id}</span>
+                    </td>
+                    <td style={{ padding: "7px 10px", borderBottom: `1px solid ${T.borderSub}` }}>
+                      <SevBadge sev={a.severity} />
+                    </td>
+                    <td style={{ padding: "7px 10px", borderBottom: `1px solid ${T.borderSub}`, color: T.textSec, fontSize: "12px" }}>
+                      {a.source}
+                    </td>
+                    <td style={{ padding: "7px 10px", borderBottom: `1px solid ${T.borderSub}`, color: T.text }}>
+                      {a.description}
+                    </td>
+                    <td style={{ padding: "7px 10px", borderBottom: `1px solid ${T.borderSub}` }}>
+                      <span className="mono" style={{ fontSize: "10px", color: T.textDis }}>{a.timestamp || "—"}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          {/* ── BLUF generation ── */}
-          <button
-            onClick={handleGenerateBluf}
-            disabled={blufState === "loading"}
-            style={s.blufBtn(blufState === "loading")}
-          >
-            {blufState === "loading" ? "Generating…" : "✦ Generate AI BLUF"}
-          </button>
-
+          {/* BLUF error */}
           {blufState === "error" && (
-            <div style={s.blufError}>⚠ {blufError}</div>
+            <div style={{
+              marginTop: 12, padding: "10px 14px", borderRadius: 6,
+              background: T.CRITICAL + "10", border: `1px solid ${T.CRITICAL}30`,
+              color: T.CRITICAL, fontSize: "12px",
+            }}>
+              {blufError}
+            </div>
           )}
 
+          {/* BLUF result */}
           {blufState === "done" && blufResult && (
-            <div style={s.blufPanel}>
-              <div style={s.blufHeader}>
-                <span style={s.blufTitle}>AI-Generated BLUF — {incident_id}</span>
-                <span style={s.blufModel}>Model: {blufResult.model}</span>
-              </div>
-              {!blufResult.configured ? (
-                <div style={s.blufNotConfigured}>{blufResult.bluf}</div>
-              ) : (
-                <pre style={s.blufText}>{blufResult.bluf}</pre>
-              )}
-            </div>
+            <BlufPanel incidentId={incident_id} result={blufResult} />
           )}
 
         </div>
@@ -479,57 +647,77 @@ function IncidentCard({ incident }) {
 }
 
 /* ─────────────────────────────────────────────
-   App
+   Stat card
+───────────────────────────────────────────── */
+function StatCard({ label, value, color }) {
+  return (
+    <div style={{
+      flex: "1 1 90px",
+      background: T.surface,
+      border: `1px solid ${T.border}`,
+      borderTop: `2px solid ${color}`,
+      borderRadius: 8,
+      padding: "14px 18px",
+      textAlign: "center",
+    }}>
+      <div className="mono" style={{ fontSize: "22px", fontWeight: 600, color, lineHeight: 1, marginBottom: 4 }}>
+        {value}
+      </div>
+      <div style={{ fontSize: "11px", color: T.textDis, letterSpacing: "0.04em" }}>{label}</div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   App root
 ───────────────────────────────────────────── */
 export default function App() {
-  const [apiStatus,    setApiStatus]    = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading,    setUploading]    = useState(false);
-  const [uploadError,  setUploadError]  = useState(null);
-  const [result,       setResult]       = useState(null); // correlate response
-  const [activeTab,    setActiveTab]    = useState("incidents");
+  const [apiStatus,      setApiStatus]      = useState(null);
+  const [selectedFile,   setSelectedFile]   = useState(null);
+  const [uploading,      setUploading]      = useState(false);
+  const [uploadError,    setUploadError]    = useState(null);
+  const [result,         setResult]         = useState(null);
+  const [activeTab,      setActiveTab]      = useState("incidents");
+  const [fpFilter,       setFpFilter]       = useState("all");
+  const [lastCorrelated, setLastCorrelated] = useState(null);
 
-  const fileInputRef = useRef(null);
+  const fileRef = useRef(null);
 
-  /* check backend on mount */
+  /* API health check */
   useEffect(() => {
     fetch("http://127.0.0.1:8000/api/status")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then(r => r.ok ? r.json() : Promise.reject())
       .then(() => setApiStatus("ok"))
       .catch(() => setApiStatus("error"));
   }, []);
 
-  function handleFileChange(e) {
-    const file = e.target.files[0] || null;
-    setSelectedFile(file);
+  function onFileChange(e) {
+    setSelectedFile(e.target.files[0] || null);
     setUploadError(null);
     setResult(null);
   }
 
-  async function handleUpload() {
+  async function onUpload() {
     if (!selectedFile) return;
     if (!selectedFile.name.toLowerCase().endsWith(".csv")) {
       setUploadError("Please select a .csv file.");
       return;
     }
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
+    const fd = new FormData();
+    fd.append("file", selectedFile);
     setUploading(true);
     setUploadError(null);
     setResult(null);
-
     try {
-      const res  = await fetch("http://127.0.0.1:8000/api/alerts/correlate", { method: "POST", body: formData });
+      const res  = await fetch("http://127.0.0.1:8000/api/alerts/correlate", { method: "POST", body: fd });
       const data = await res.json();
-
       if (!res.ok) {
-        const msg = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
-        setUploadError(msg);
+        setUploadError(typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail));
       } else {
         setResult(data);
+        setLastCorrelated(new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC");
         setActiveTab("incidents");
+        setFpFilter("all");
       }
     } catch {
       setUploadError("Network error — make sure the backend is running on port 8000.");
@@ -538,168 +726,277 @@ export default function App() {
     }
   }
 
-  function handleClear() {
+  function onClear() {
     setSelectedFile(null);
     setResult(null);
     setUploadError(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    setLastCorrelated(null);
+    if (fileRef.current) fileRef.current.value = "";
   }
 
-  /* derived */
-  const statusColour =
-    apiStatus === "ok" ? "#22c55e" : apiStatus === "error" ? "#ef4444" : "#94a3b8";
-  const statusLabel =
-    apiStatus === "ok"    ? "Backend connected" :
-    apiStatus === "error" ? "Backend unreachable — start uvicorn on port 8000" :
-    "Connecting…";
-  const uploadDisabled = !selectedFile || uploading || apiStatus !== "ok";
+  const canUpload = !!selectedFile && !uploading && apiStatus === "ok";
 
-  /* ── Render ── */
   return (
-    <div style={s.app}>
-      <header style={s.header}>
-        <h1 style={s.headerTitle}>Threat Intelligence Dashboard</h1>
-        <span style={s.badge}>HACKATHON v0.1</span>
+    <div style={{ minHeight: "100vh", background: T.bg, display: "flex", flexDirection: "column" }}>
+
+      {/* ── Header ── */}
+      <header style={{
+        height: 56,
+        background: T.surface,
+        borderBottom: `1px solid ${T.border}`,
+        padding: "0 28px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        flexShrink: 0,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Shield icon (inline SVG) */}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+            <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6l-8-4z"
+              fill={T.accent + "30"} stroke={T.accent} strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M9 12l2 2 4-4" stroke={T.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: 600, color: T.text }}>
+              Threat Intelligence
+            </div>
+            <div style={{ fontSize: "10px", color: T.textDis, letterSpacing: "0.03em" }}>
+              Correlation & Alert Prioritisation
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          {lastCorrelated && (
+            <div style={{ fontSize: "11px", color: T.textDis, textAlign: "right" }}>
+              Last run&nbsp;
+              <span className="mono" style={{ color: T.textSec }}>{lastCorrelated}</span>
+              {selectedFile && <span style={{ color: T.textDis }}>&nbsp;· {selectedFile.name}</span>}
+            </div>
+          )}
+          <StatusDot status={apiStatus} />
+        </div>
       </header>
 
-      <main style={s.main}>
+      {/* ── Main ── */}
+      <main style={{ flex: 1, maxWidth: 1060, width: "100%", margin: "0 auto", padding: "28px 24px" }}>
 
-        {/* status bar */}
-        <div style={s.statusCard}>
-          <div style={s.dot(statusColour)} />
-          <span>{statusLabel}</span>
-        </div>
+        {/* Upload panel */}
+        <div style={{
+          background: T.surface,
+          border: `1px solid ${T.border}`,
+          borderRadius: 10,
+          padding: "20px 22px",
+          marginBottom: 24,
+        }}>
+          <div style={{ fontSize: "13px", fontWeight: 600, color: T.text, marginBottom: 14 }}>
+            Upload Alerts
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <input ref={fileRef} type="file" accept=".csv" id="csv-input" style={{ display: "none" }} onChange={onFileChange} />
 
-        {/* upload card */}
-        <div style={s.uploadCard}>
-          <label style={s.uploadCardLabel}>Upload Security Alerts CSV</label>
-          <div style={s.fileRow}>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              style={s.fileInput}
-              id="csv-input"
-              onChange={handleFileChange}
-            />
-            <label htmlFor="csv-input" style={s.chooseBtn}>Choose file</label>
-            <span style={s.fileName}>{selectedFile ? selectedFile.name : "No file selected"}</span>
-            <button onClick={handleUpload} disabled={uploadDisabled} style={s.uploadBtn(uploadDisabled)}>
+            <label htmlFor="csv-input" className="btn-ghost" style={{
+              display: "inline-block",
+              padding: "6px 14px", borderRadius: 6,
+              border: `1px solid ${T.border}`,
+              color: T.textSec, fontSize: "12px", cursor: "pointer",
+              background: "transparent",
+            }}>
+              Choose CSV
+            </label>
+
+            {selectedFile ? (
+              <span style={{ fontSize: "12px", color: T.text }}>{selectedFile.name}</span>
+            ) : (
+              <span style={{ fontSize: "12px", color: T.textDis }}>No file selected</span>
+            )}
+
+            <button
+              onClick={onUpload}
+              disabled={!canUpload}
+              className={canUpload ? "btn-primary" : ""}
+              style={{
+                padding: "6px 16px", borderRadius: 6,
+                border: "none",
+                background: canUpload ? T.accentMut : T.surfaceEl,
+                color: canUpload ? "#fff" : T.textDis,
+                fontSize: "12px", fontWeight: 600,
+              }}
+            >
               {uploading ? "Analysing…" : "Analyse & Correlate"}
             </button>
-            {result && <button onClick={handleClear} style={s.chooseBtn}>Clear</button>}
+
+            {result && (
+              <button onClick={onClear} className="btn-ghost" style={{
+                padding: "6px 12px", borderRadius: 6,
+                border: `1px solid ${T.border}`,
+                background: "transparent",
+                color: T.textSec, fontSize: "12px",
+              }}>Clear</button>
+            )}
           </div>
-          <p style={s.hint}>
-            Required: <code>id, severity, source, description</code> &nbsp;·&nbsp;
-            Optional (for better correlation): <code>timestamp, src_ip, dst_ip, hostname, username</code>
-          </p>
+
+          <div style={{ marginTop: 10, fontSize: "11px", color: T.textDis }}>
+            Required:&nbsp;
+            <code style={{ color: T.textSec }}>id, severity, source, description</code>
+            &emsp;Optional:&nbsp;
+            <code style={{ color: T.textSec }}>timestamp, src_ip, dst_ip, hostname, username</code>
+          </div>
         </div>
 
-        {/* error banner */}
-        {uploadError && <div style={s.errorBanner}>⚠ {uploadError}</div>}
+        {/* Error */}
+        {uploadError && (
+          <div style={{
+            padding: "10px 14px", borderRadius: 6, marginBottom: 20,
+            background: T.CRITICAL + "10", border: `1px solid ${T.CRITICAL}30`,
+            color: T.CRITICAL, fontSize: "12px",
+          }}>
+            {uploadError}
+          </div>
+        )}
 
-        {/* results */}
+        {/* Results */}
         {result && (() => {
           const { total_alerts, total_incidents, incidents } = result;
 
-          // Count incidents by priority (derived client-side from incidents array)
-          const priorityCounts = {};
-          incidents.forEach((inc) => {
-            priorityCounts[inc.priority] = (priorityCounts[inc.priority] || 0) + 1;
-          });
+          const counts = {};
+          incidents.forEach(inc => { counts[inc.priority] = (counts[inc.priority] || 0) + 1; });
 
-          const PRIORITY_COLOUR = { CRITICAL: "#f87171", HIGH: "#fb923c", MEDIUM: "#fcd34d", LOW: "#4ade80" };
+          const CLRS = { CRITICAL: T.CRITICAL, HIGH: T.HIGH, MEDIUM: T.MEDIUM, LOW: T.LOW };
 
           return (
-            <>
-              <div style={s.successBanner}>
-                ✓ Correlated <strong>{total_alerts}</strong> alerts into{" "}
-                <strong>{total_incidents}</strong> incident{total_incidents !== 1 ? "s" : ""} from{" "}
-                <em>{selectedFile?.name}</em>
+            <div className="fade-in">
+              {/* Stat row */}
+              <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
+                <StatCard label="Total Alerts"    value={total_alerts}    color={T.accent} />
+                <StatCard label="Incidents"       value={total_incidents} color={T.textSec} />
+                {PRIORITY_ORDER.filter(p => counts[p]).map(p => (
+                  <StatCard key={p} label={p.charAt(0) + p.slice(1).toLowerCase()} value={counts[p]} color={CLRS[p]} />
+                ))}
               </div>
 
-              {/* summary stat cards */}
-              <div style={s.statsRow}>
-                <div style={s.statCard(SEV_COLOUR.TOTAL)}>
-                  <div style={s.statNumber(SEV_COLOUR.TOTAL)}>{total_alerts}</div>
-                  <div style={s.statLabel}>Alerts</div>
+              {/* Tabs + filter */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${T.border}`, marginBottom: 20 }}>
+                <div style={{ display: "flex" }}>
+                  {[
+                    ["incidents", `Incidents (${total_incidents})`],
+                    ["all",       `All Alerts (${total_alerts})`],
+                  ].map(([id, label]) => (
+                    <button
+                      key={id}
+                      className={`tab-item ${activeTab === id ? "active" : ""}`}
+                      onClick={() => setActiveTab(id)}
+                      style={{
+                        padding: "8px 16px", fontSize: "13px", fontWeight: 500,
+                        border: "none", background: "transparent",
+                        color: activeTab === id ? T.text : T.textSec,
+                        marginBottom: -1,
+                      }}
+                    >{label}</button>
+                  ))}
                 </div>
-                <div style={s.statCard(SEV_COLOUR.INCIDENTS)}>
-                  <div style={s.statNumber(SEV_COLOUR.INCIDENTS)}>{total_incidents}</div>
-                  <div style={s.statLabel}>Incidents</div>
-                </div>
-                {PRIORITY_ORDER.map((p) =>
-                  priorityCounts[p] ? (
-                    <div key={p} style={s.statCard(PRIORITY_COLOUR[p])}>
-                      <div style={s.statNumber(PRIORITY_COLOUR[p])}>{priorityCounts[p]}</div>
-                      <div style={s.statLabel}>{p}</div>
-                    </div>
-                  ) : null
+
+                {activeTab === "incidents" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, paddingBottom: 6 }}>
+                    <span style={{ fontSize: "11px", color: T.textDis }}>Filter:</span>
+                    {[["all", "All"], ["fp", "False Positive"], ["confirmed", "Confirmed"]].map(([val, lbl]) => (
+                      <button
+                        key={val}
+                        className={`filter-pill ${fpFilter === val ? "active" : ""}`}
+                        onClick={() => setFpFilter(val)}
+                        style={{
+                          fontSize: "11px", padding: "2px 9px", borderRadius: 20,
+                          border: `1px solid ${T.border}`,
+                          background: "transparent",
+                          color: T.textSec, cursor: "pointer",
+                        }}
+                      >{lbl}</button>
+                    ))}
+                  </div>
                 )}
               </div>
 
-              {/* tab bar */}
-              <div style={s.tabRow}>
-                <button style={s.tab(activeTab === "incidents")} onClick={() => setActiveTab("incidents")}>
-                  Incidents ({total_incidents})
-                </button>
-                <button style={s.tab(activeTab === "all")} onClick={() => setActiveTab("all")}>
-                  All Alerts ({total_alerts})
-                </button>
-              </div>
-
-              {/* incidents tab */}
+              {/* Incidents */}
               {activeTab === "incidents" && (
-                <>
-                  <h2 style={s.sectionTitle}>Correlated Incidents</h2>
-                  {incidents.map((inc) => (
-                    <IncidentCard key={inc.incident_id} incident={inc} />
+                <div>
+                  <div style={{ fontSize: "12px", color: T.textDis, marginBottom: 12 }}>
+                    Sorted by risk score — highest first
+                  </div>
+                  {incidents.map(inc => (
+                    <IncidentCard key={inc.incident_id} incident={inc} fpFilter={fpFilter} />
                   ))}
-                </>
+                </div>
               )}
 
-              {/* all alerts tab */}
+              {/* All alerts */}
               {activeTab === "all" && (
-                <>
-                  <h2 style={s.sectionTitle}>All Alerts</h2>
-                  <table style={{ ...s.table, fontSize: "14px" }}>
-                    <thead>
-                      <tr>
-                        <th style={s.th}>ID</th>
-                        <th style={s.th}>Severity</th>
-                        <th style={s.th}>Source</th>
-                        <th style={s.th}>Description</th>
-                        <th style={s.th}>Timestamp</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {incidents.flatMap((inc) =>
-                        inc.alerts.map((a, idx) => (
-                          <tr key={`${inc.incident_id}-${idx}`}>
-                            <td style={s.td}>{a.id}</td>
-                            <td style={s.td}><span style={s.severityBadge(a.severity)}>{a.severity}</span></td>
-                            <td style={s.td}>{a.source}</td>
-                            <td style={s.td}>{a.description}</td>
-                            <td style={s.td}>{a.timestamp || "—"}</td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                  <thead>
+                    <tr>
+                      {["ID", "Severity", "Source", "Description", "Timestamp"].map(h => (
+                        <th key={h} style={{
+                          textAlign: "left", padding: "6px 12px",
+                          borderBottom: `1px solid ${T.border}`,
+                          color: T.textDis, fontWeight: 600, fontSize: "11px",
+                          letterSpacing: "0.04em", textTransform: "uppercase",
+                        }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {incidents.flatMap(inc =>
+                      inc.alerts.map((a, i) => (
+                        <tr key={`${inc.incident_id}-${i}`} className="tr-hover">
+                          <td style={{ padding: "8px 12px", borderBottom: `1px solid ${T.borderSub}` }}>
+                            <span className="mono" style={{ fontSize: "11px", color: T.textDis }}>{a.id}</span>
+                          </td>
+                          <td style={{ padding: "8px 12px", borderBottom: `1px solid ${T.borderSub}` }}>
+                            <SevBadge sev={a.severity} />
+                          </td>
+                          <td style={{ padding: "8px 12px", borderBottom: `1px solid ${T.borderSub}`, color: T.textSec }}>
+                            {a.source}
+                          </td>
+                          <td style={{ padding: "8px 12px", borderBottom: `1px solid ${T.borderSub}`, color: T.text }}>
+                            {a.description}
+                          </td>
+                          <td style={{ padding: "8px 12px", borderBottom: `1px solid ${T.borderSub}` }}>
+                            <span className="mono" style={{ fontSize: "10px", color: T.textDis }}>{a.timestamp || "—"}</span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               )}
-            </>
+            </div>
           );
         })()}
 
-        {/* empty state */}
+        {/* Empty state */}
         {!result && !uploadError && (
-          <div style={s.emptyState}>
-            Upload a CSV file above to correlate and view security incidents.
+          <div style={{ textAlign: "center", padding: "72px 24px", color: T.textDis }}>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" style={{ margin: "0 auto 14px", display: "block", opacity: 0.3 }}>
+              <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6l-8-4z"
+                stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinejoin="round"/>
+            </svg>
+            <div style={{ fontSize: "13px", marginBottom: 6, color: T.textSec }}>No data yet</div>
+            <div style={{ fontSize: "12px" }}>Upload a CSV file to correlate and prioritise security alerts.</div>
           </div>
         )}
 
       </main>
+
+      {/* ── Footer ── */}
+      <footer style={{
+        borderTop: `1px solid ${T.border}`,
+        padding: "10px 28px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        fontSize: "11px", color: T.textDis,
+        background: T.surface, flexShrink: 0,
+      }}>
+        <span>Threat Intelligence Correlation — TheOverfitters · IBM Bob AI Hackathon</span>
+        <span>MITRE ATT&amp;CK · Gemini AI</span>
+      </footer>
+
     </div>
   );
 }
