@@ -1,6 +1,7 @@
 # Presentation
 
 Place your slide deck in this folder.
+Here is PPT folder link {https://drive.google.com/drive/folders/1GfSwNi0EvTN2cv9gCKwF8IeZitufjVgT}
 
 ## Accepted Formats
 
