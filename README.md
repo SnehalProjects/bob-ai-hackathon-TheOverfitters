@@ -1,6 +1,6 @@
-# 🚀 [Your Project Title Here]
+# 🚀 Threat Intelligence Correlation & Alert Prioritisation Assistant
 
-> ⚠️ **Replace everything in `[ ]` brackets with your actual content before submission.**
+> **AI-powered assistant that correlates SIEM alerts, assigns explainable risk scores, maps to MITRE ATT&CK, and generates concise BLUF summaries for defence analysts.**
 
 ---
 
@@ -8,10 +8,10 @@
 
 | Field | Value |
 |---|---|
-| **Team Name** | [Your Team Name] |
-| **Track** | [AI / DevOps / Sustainability / Open] |
-| **Team Lead** | [Name] — [email@ibm.com] |
-| **Members** | [Name 1], [Name 2], [Name 3] |
+| **Team Name** | TheOverfitters |
+| **Track** | AI |
+| **Team Lead** | Sejal Lathigara — sejallathigara1008@gmail.com |
+| **Members** | Snehal Mishra, Raj Joshi, Mahek Trambadia |
 
 ---
 
@@ -19,7 +19,7 @@
 
 > In 2–3 sentences: What problem does your project solve? Who experiences this problem?
 
-[Describe the real-world problem your project addresses. Be specific about who the user is and what pain point they face.]
+Security and defence analysts receive thousands of alerts every day from SIEM systems, cyber sensors, intelligence feeds, and reports in different formats, making it difficult to identify genuine threats quickly. Missing a critical threat can have serious consequences, while investigating large numbers of false positives wastes valuable analyst time.
 
 ---
 
@@ -27,17 +27,17 @@
 
 > In 2–3 sentences: What did you build? How does it solve the problem above?
 
-[Describe your solution clearly. Explain the core mechanism — what makes it work.]
+We built an AI-powered Threat Intelligence Correlation & Alert Prioritisation Assistant that groups related alerts, assigns an explainable risk/priority score, maps suspicious activities to MITRE ATT&CK, and identifies the most important incidents for investigation. It then uses Gemini AI to generate a concise BLUF (Bottom Line Up Front) summary containing the threat, evidence, priority, MITRE techniques, and recommended actions for analysts and commanders.
 
 ---
 
 ## ✨ Key Features
 
-- **Feature 1:** [Brief description — e.g., "Real-time anomaly detection using watsonx.ai"]
-- **Feature 2:** [Brief description]
-- **Feature 3:** [Brief description]
-- **Feature 4:** [Optional]
-- **Feature 5:** [Optional]
+- **Feature 1: Alert Correlation** — Groups related security alerts based on common IPs, hostnames, usernames, and time windows.
+- **Feature 2: Explainable Risk Scoring** — Calculates a 0–100 risk score and classifies incidents as Critical, High, Medium, or Low with clear reasons.
+- **Feature 3: MITRE ATT&CK Mapping** — Maps suspicious activities to relevant MITRE ATT&CK techniques such as PowerShell, Phishing, and Credential Dumping.
+- **Feature 4: AI-Powered BLUF Generation** — Uses Gemini AI to generate a concise Bottom Line Up Front (BLUF) containing the threat, evidence, priority, MITRE techniques, and recommended actions.
+- **Feature 5: Prioritized Threat Dashboard** — Presents the most important incidents first, helping analysts focus on high-priority threats and reduce alert overload.
 
 ---
 
@@ -45,27 +45,46 @@
 
 | Category | Technologies |
 |---|---|
-| **Languages** | [e.g., Python, TypeScript] |
-| **Frameworks** | [e.g., FastAPI, React] |
-| **IBM Technologies** | [e.g., watsonx.ai, IBM Bob, IBM Cloud] |
-| **Databases** | [e.g., PostgreSQL, Redis] |
-| **Other** | [e.g., Docker, GitHub Actions] |
+| **Languages** | Python, JavaScript, HTML, CSS |
+| **Frameworks** | FastAPI, React.js |
+| **IBM Technologies** | IBM Bob |
+| **AI / APIs** | Google Gemini API, Google GenAI SDK |
+| **Databases** | None — file-based prototype |
+| **Other** | Git, GitHub, GitHub Actions, CSV, MITRE ATT&CK |
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-├── src/                  # All source code
-├── docs/                 # Written documentation
-│   ├── problem-statement.md
-│   ├── solution-overview.md
-│   ├── architecture.md
-│   └── setup-guide.md
+.
 ├── demo/                 # Demo artifacts
 │   ├── screenshots/      # App screenshots
-│   └── demo-video-link.txt  # Link to demo video
-├── presentation/         # Slide deck
+│   ├── demo-video-link.txt
+│   └── live-demo-url.txt
+├── docs/                 # Written documentation
+│   ├── architecture.md
+│   ├── problem-statement.md
+│   ├── setup-guide.md
+│   ├── solution-overview.md
+│   └── template-guide.md
+├── presentation/         # Slide deck & presentation files
+├── src/                  # All source code
+│   ├── backend/          # FastAPI server, alert correlation, risk scoring & Gemini BLUF generator
+│   │   ├── bluf_generator.py
+│   │   ├── correlator.py
+│   │   ├── main.py
+│   │   ├── mitre.py
+│   │   ├── scorer.py
+│   │   └── requirements.txt
+│   ├── frontend/         # React.js Web Dashboard UI
+│   │   ├── public/
+│   │   ├── src/
+│   │   └── package.json
+│   ├── .env.example
+│   └── sample_alerts.csv # Sample SIEM alerts dataset
+├── CONTRIBUTING.md
+├── README.md
 └── submission.yaml       # Structured submission metadata
 ```
 
@@ -77,18 +96,22 @@
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/[your-repo].git
-cd [your-repo]
+git clone https://github.com/SnehalProjects/bob-ai-hackathon-TheOverfitters.git
+cd bob-ai-hackathon-TheOverfitters
 
-# 2. Install dependencies
-[your install command here]
+# 2. Set up and run Backend
+cd src/backend
+python -m venv venv
+# On Windows: venv\Scripts\activate | On Linux/macOS: source venv/bin/activate
+pip install -r requirements.txt
+cp ../.env.example .env
+# Edit .env to add your GEMINI_API_KEY
+uvicorn main:app --reload --port 8000
 
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your values
-
-# 4. Run the project
-[your run command here]
+# 3. Set up and run Frontend (in a separate terminal)
+cd src/frontend
+npm install
+npm start
 ```
 
 ---
@@ -100,7 +123,7 @@ cp .env.example .env
 | 📹 Demo Video | [See demo/demo-video-link.txt](demo/demo-video-link.txt) |
 | 🌐 Live Demo | [See demo/live-demo-url.txt](demo/live-demo-url.txt) |
 | 🖼️ Screenshots | [See demo/screenshots/](demo/screenshots/) |
-| 📊 Presentation | [See presentation/slides.pdf](presentation/) |
+| 📊 Presentation | [See presentation/](presentation/) |
 
 ---
 
@@ -108,14 +131,16 @@ cp .env.example .env
 
 > Be honest — judges appreciate transparency over overclaiming.
 
-- [Limitation 1: e.g., "Authentication is mocked — not production-ready"]
-- [Limitation 2: e.g., "Only tested on Chrome"]
-- [Limitation 3: e.g., "Feature X is scaffolded but not fully implemented"]
+- [Limitation 1: File-based prototype using sample CSV data rather than real-time SIEM network streams]
+- [Limitation 2: Gemini BLUF generation requires an active internet connection and valid Gemini API key]
+- [Limitation 3: Authentication is mocked — not production-ready]
 
 ---
 
 ## 🏅 What We're Most Proud Of
 
-[Tell the judges what part of your submission is strongest and worth paying close attention to.]
+> Tell the judges what part of your submission is strongest and worth paying close attention to.
+
+[Automated correlation engine combining rule-based heuristics with Gemini AI for instant threat summarization and explainable risk scoring.]
 
 ---
