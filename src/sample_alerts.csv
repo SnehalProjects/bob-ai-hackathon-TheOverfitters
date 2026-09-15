@@ -1,0 +1,21 @@
+id,severity,source,description,timestamp,src_ip,dst_ip,hostname,username
+1,HIGH,IDS,Port scan detected,2024-06-01T08:01:00,192.168.1.50,10.0.0.5,,
+2,HIGH,Firewall,Outbound connection to known C2 server,2024-06-01T08:06:00,192.168.1.50,198.51.100.7,,
+3,HIGH,EDR,Malware process spawned by Office application,2024-06-01T08:15:00,,,WORKSTATION-04,
+4,HIGH,EDR,Credential dumping tool (Mimikatz) executed,2024-06-01T08:22:00,,,WORKSTATION-04,
+5,HIGH,SIEM,Ransomware signature detected on file server,2024-06-01T08:35:00,192.168.1.50,,FS-01,
+6,MEDIUM,Firewall,Unusual outbound traffic on port 4444,2024-06-01T09:00:00,10.0.0.22,203.0.113.42,,
+7,MEDIUM,SIEM,Multiple failed login attempts on admin account,2024-06-01T09:05:00,10.0.0.22,,,admin
+8,MEDIUM,IDS,Lateral movement — SMB brute force from attacker,2024-06-01T09:10:00,10.0.0.22,10.0.1.15,,
+9,MEDIUM,WAF,SQL injection attempt detected on /api/login,2024-06-01T10:00:00,203.0.113.42,,,
+10,MEDIUM,EDR,Suspicious PowerShell script executed,2024-06-01T10:05:00,,,LAPTOP-07,
+11,MEDIUM,Proxy,User accessed phishing URL flagged by threat feed,2024-06-01T10:08:00,,,LAPTOP-07,jsmith
+12,MEDIUM,SIEM,New local admin account created outside change window,2024-06-01T10:12:00,,,LAPTOP-07,jsmith
+13,LOW,SIEM,User account locked out after 5 failed logins,2024-06-01T11:00:00,,,,jsmith
+14,LOW,AV,Potentially unwanted application detected,2024-06-01T13:00:00,,,LAPTOP-12,
+15,LOW,Proxy,Ad-network domain blocked for bwilson,2024-06-01T13:04:00,,,LAPTOP-12,bwilson
+16,LOW,SIEM,Off-hours login for user mgreen,2024-06-01T14:00:00,10.0.3.44,,,mgreen
+17,LOW,AV,Quarantined adware in temp folder,2024-06-01T14:04:00,,,DESKTOP-09,mgreen
+18,LOW,Firewall,DNS request to newly registered domain,2024-06-01T14:07:00,10.0.3.44,,,
+19,LOW,IDS,ICMP flood — possible misconfiguration,2024-06-01T17:00:00,10.0.2.80,,,
+20,LOW,Proxy,Large file download (2.3 GB) flagged for review,2024-06-01T17:03:00,10.0.2.80,,,tharris
